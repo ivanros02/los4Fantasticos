@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.expo
+*.log
+family-backend/src/config/firebase-service-account.json
+family-app/google-services.json
+family-app/GoogleService-Info.plist
+android/
+ios/
