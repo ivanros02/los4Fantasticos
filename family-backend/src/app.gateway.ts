@@ -14,6 +14,14 @@ interface Location {
   lat: number;
   lng: number;
   timestamp: number;
+  name?: string;
+}
+
+interface ConnectedUser {
+  socketId: string;
+  uid: string;
+  name?: string;
+  location?: Location;
 }
 
 @WebSocketGateway({ cors: true })
@@ -21,10 +29,10 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  private connectedUsers = new Map<string, { socketId: string; uid: string; location?: Location }>();
+  private connectedUsers = new Map<string, ConnectedUser>();
   private lastSavedLocations = new Map<string, Location>();
 
-  constructor(private firebaseService: FirebaseService) {}
+  constructor(private firebaseService: FirebaseService) { }
 
   async handleConnection(client: Socket) {
     const token = client.handshake.auth.token;
@@ -62,6 +70,10 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     user.location = location;
 
+    if (location.name) {
+      user.name = location.name;
+    }
+
     this.server.to('family').emit('locationUpdate', {
       uid: user.uid,
       location,
@@ -70,16 +82,17 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('requestAllLocations')
   handleRequestLocations(@ConnectedSocket() client: Socket) {
+
     const locations = Array.from(this.connectedUsers.values())
       .filter((u) => u.location)
-      .map((u) => ({ uid: u.uid, location: u.location }));
+      .map((u) => ({ uid: u.uid, name: u.name, location: u.location }));
 
     client.emit('allLocations', locations);
   }
 
   private async saveLocationToFirestore(uid: string, location: Location) {
     const lastSaved = this.lastSavedLocations.get(uid);
-    
+
     if (lastSaved && this.getDistance(lastSaved, location) < 50) {
       return;
     }

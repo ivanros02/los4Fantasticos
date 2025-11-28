@@ -2,12 +2,13 @@ import { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { router } from 'expo-router';
-import { signOut } from '../services/auth';
+import { signOut, getCurrentUser  } from '../services/auth';
 import { connectSocket, disconnectSocket, getSocket } from '../services/socket';
 import { requestPermissions, startForegroundTracking, startBackgroundTracking, stopBackgroundTracking } from '../services/location';
 
 interface UserLocation {
     uid: string;
+    name: string;
     location: {
         lat: number;
         lng: number;
@@ -43,7 +44,7 @@ export default function Map() {
             lat: loc.location.lat,
             lng: loc.location.lng,
             color: COLORS[i % COLORS.length],
-            label: loc.uid.slice(0, 6),
+            label:  loc.name || loc.uid.slice(0, 6),
         }));
 
         if (myLocation) {
@@ -100,7 +101,7 @@ export default function Map() {
                 if (!granted) return;
 
                 console.log('Iniciando tracking...');
-
+                const currentUser = getCurrentUser();
                 watchRef.current = await startForegroundTracking((location) => {
                     console.log('Ubicación obtenida:', location.coords);
 
@@ -114,6 +115,7 @@ export default function Map() {
                     console.log('Socket existe:', !!socket);
                     socket?.emit('updateLocation', {
                         ...loc,
+                        name: currentUser?.name || 'Sin nombre',
                         timestamp: location.timestamp,
                     });
                 });

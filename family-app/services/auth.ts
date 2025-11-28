@@ -18,6 +18,16 @@ export async function getToken(): Promise<string | null> {
   return user.getIdToken();
 }
 
+export function getCurrentUser() {
+  const user = auth().currentUser;
+  if (!user) return null;
+  return {
+    uid: user.uid,
+    name: user.displayName || 'Sin nombre',
+    photo: user.photoURL,
+  };
+}
+
 export function onAuthStateChanged(callback: (user: any) => void) {
   return auth().onAuthStateChanged(callback);
 }

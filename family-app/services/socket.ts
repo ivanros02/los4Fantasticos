@@ -3,7 +3,7 @@ import { getToken } from './auth';
 
 let socket: Socket | null = null;
 
-const BACKEND_URL = 'http://192.168.100.14:3000'; // cambiar por tu IP
+const BACKEND_URL = 'https://family-backend-9l2z.onrender.com'; // cambiar por tu IP
 
 export async function connectSocket() {
   const token = await getToken();
